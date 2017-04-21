@@ -1,3 +1,6 @@
 [submodule "lib/lycan"]
 	path = lib/lycan
 	url = https://github.com/Tw1ddle/Lycan
+[submodule "lib/haxe-kiwi"]
+	path = lib/haxe-kiwi
+	url = https://github.com/Tw1ddle/haxe-kiwi

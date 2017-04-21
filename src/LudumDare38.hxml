@@ -1,1 +1,7 @@
 -main Main
+
+-lib actuate
+-lib haxe-kiwi
+-lib markov-namegen
+-lib msignal
+-lib sure

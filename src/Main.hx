@@ -1,20 +1,10 @@
 package;
 
-import StringTransforms.EditOperation;
 import dat.GUI;
-import haxe.Timer;
-import haxe.ds.IntMap;
 import js.Browser;
-import motion.Actuate;
-import motion.easing.Expo;
-import msignal.Signal.Signal0;
-import msignal.Signal.Signal1;
 import msignal.Signal.Signal2;
-import particle.Emitter;
-import particle.Group;
 import shaders.SkyEffectController;
 import three.Color;
-import three.CubeGeometry;
 import three.Mesh;
 import three.Object3D;
 import three.PerspectiveCamera;
@@ -23,11 +13,9 @@ import three.Scene;
 import three.ShaderMaterial;
 import three.SphereBufferGeometry;
 import three.Vector2;
-import three.Vector3;
 import three.WebGLRenderer;
 import webgl.Detector;
 import webgl.Detector.WebGLSupport;
-using markov.util.IntExtensions;
 
 class Main {
 	public static inline var DEGREES_TO_RAD:Float = 0.01745329;
@@ -58,7 +46,6 @@ class Main {
 	private var gameAttachPoint:Dynamic;
 	private var renderer:WebGLRenderer;
 	public var skyEffectController(default, null):SkyEffectController;
-	private var lyricLinesHandled:Int = 0;
 	
 	private var lastAnimationTime:Float = 0.0; // Last time from requestAnimationFrame
 	private var dt:Float = 0.0; // Frame delta time
@@ -252,36 +239,6 @@ class Main {
 			folder.add(object3d.scale, 'x', 0.0, 10.0, 0.1).listen();
 			folder.add(object3d.scale, 'y', 0.0, 10.0, 0.1).listen();
 			folder.add(object3d.scale, 'z', 0.0, 10.0, 0.1).listen();
-		}
-		
-		if (Std.is(object, Emitter)) {
-			var emitter:Emitter = cast object;
-			
-			gui.add(emitter, 'type', ['cube', 'sphere', 'disk']);
-			
-			var fields = Reflect.fields(emitter);
-			
-			for (field in fields) {
-				var prop = Reflect.getProperty(emitter, field);
-				
-				if (Std.is(prop, Color)) {
-					var folder = gui.addFolder(field);
-					folder.add(prop, 'r', 0, 1, 0.01).listen();
-					folder.add(prop, 'g', 0, 1, 0.01).listen();
-					folder.add(prop, 'b', 0, 1, 0.01).listen();
-				}
-				else if (Std.is(prop, Vector3)) {
-					var folder = gui.addFolder(field);
-					folder.add(prop, 'x', -2000, 2000, 0.1).listen();
-					folder.add(prop, 'y', -2000, 2000, 0.1).listen();
-					folder.add(prop, 'z', -4000, 4000, 0.1).listen();
-				}
-				else {
-					if(Std.is(prop, Float)) {
-						gui.add(emitter, field, 0.04).listen();
-					}
-				}
-			}
 		}
 		
 		if (Std.is(object, SkyEffectController)) {
