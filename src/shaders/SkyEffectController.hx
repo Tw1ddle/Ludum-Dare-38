@@ -1,7 +1,7 @@
 package shaders;
 
 import dat.GUI;
-import markov.util.FileReader;
+import lycan.util.TextFileReader;
 import motion.*;
 import three.Vector3;
 
@@ -28,8 +28,8 @@ class SkyShader {
 		tonemapWeighting: { type: "f", value:1000.0 }
 	};
 	
-	public static var vertexShader = FileReader.readFileAsString("shaders/glsl/sky.vertex");
-	public static var fragmentShader = FileReader.readFileAsString("shaders/glsl/sky.fragment");
+	public static var vertexShader = TextFileReader.readFileAsString("shaders/glsl/sky.vertex");
+	public static var fragmentShader = TextFileReader.readFileAsString("shaders/glsl/sky.fragment");
 }
 
 class SkyEffectController {

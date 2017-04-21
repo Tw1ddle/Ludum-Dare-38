@@ -17,6 +17,29 @@ import three.WebGLRenderer;
 import webgl.Detector;
 import webgl.Detector.WebGLSupport;
 
+import lycan.util.JsonReader;
+import lycan.util.TextFileReader;
+
+import kiwi.Constraint;
+import kiwi.frontend.ConstraintParser;
+import kiwi.frontend.VarResolver;
+import kiwi.Strength;
+import kiwi.Variable;
+
+import nape.callbacks.CbEvent;
+import nape.callbacks.CbType;
+import nape.callbacks.InteractionCallback;
+import nape.callbacks.InteractionListener;
+import nape.callbacks.InteractionType;
+import nape.constraint.PivotJoint;
+import nape.geom.Vec2;
+import nape.phys.Body;
+import nape.phys.BodyList;
+import nape.phys.BodyType;
+import nape.shape.Circle;
+import nape.shape.Polygon;
+import nape.space.Space;
+
 class Main {
 	public static inline var DEGREES_TO_RAD:Float = 0.01745329;
 	public static inline var GAME_VIEWPORT_WIDTH:Float = 800;
@@ -24,7 +47,7 @@ class Main {
 	private static inline var REPO_URL:String = "https://github.com/Tw1ddle/Ludum-Dare-38";
 	private static inline var DEVELOPER_NAME:String = "Sam Twidale";
 	private static inline var TWITTER_URL:String = "https://twitter.com/Sam_Twidale";
-	private static inline var LUDUM_DARE_URL:String = "TODO";
+	private static inline var LUDUM_DARE_URL:String = "https://ldjam.com/events/ludum-dare/38"; // TODO set to the game page
 	private static inline var WEBSITE_URL:String = "http://samcodes.co.uk/";
 	private static inline var HAXE_URL:String = "http://haxe.org/";
 	private static inline var THREEJS_URL:String = "https://github.com/mrdoob/three.js/";
@@ -32,9 +55,9 @@ class Main {
 	
 	#if debug
 	private var guiItemCount:Int = 0;
-	public var particleGUI(default, null):GUI; //= new GUI( { autoPlace:true } );
-	public var shaderGUI(default, null):GUI; //= new GUI( { autoPlace:true } );
-	public var sceneGUI(default, null):GUI; //= new GUI( { autoPlace:true } );
+	public var particleGUI(default, null):GUI = new GUI( { autoPlace:true } );
+	public var shaderGUI(default, null):GUI = new GUI( { autoPlace:true } );
+	public var sceneGUI(default, null):GUI = new GUI( { autoPlace:true } );
 	#end
 	
 	public var worldScene(default, null):Scene = new Scene();
