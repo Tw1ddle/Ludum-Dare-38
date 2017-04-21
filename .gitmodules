@@ -1,0 +1,3 @@
+[submodule "lib/lycan"]
+	path = lib/lycan
+	url = https://github.com/Tw1ddle/Lycan
