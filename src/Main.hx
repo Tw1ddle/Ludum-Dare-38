@@ -2,6 +2,13 @@ package;
 
 import dat.GUI;
 import js.Browser;
+import ludum.Rgba;
+import three.CylinderGeometry;
+import three.CircleBufferGeometry;
+import three.MeshBasicMaterial;
+import three.Geometry;
+import three.Material;
+import ludum.WorldBuilder;
 import msignal.Signal.Signal2;
 import shaders.SkyEffectController;
 import three.Color;
@@ -17,14 +24,18 @@ import three.WebGLRenderer;
 import webgl.Detector;
 import webgl.Detector.WebGLSupport;
 
-import lycan.util.JsonReader;
-import lycan.util.TextFileReader;
-
 import kiwi.Constraint;
 import kiwi.frontend.ConstraintParser;
 import kiwi.frontend.VarResolver;
 import kiwi.Strength;
 import kiwi.Variable;
+
+import lycan.util.JsonReader;
+import lycan.util.TextFileReader;
+
+import markov.namegen.NameGenerator;
+
+import motion.Actuate;
 
 import nape.callbacks.CbEvent;
 import nape.callbacks.CbType;
@@ -40,10 +51,23 @@ import nape.shape.Circle;
 import nape.shape.Polygon;
 import nape.space.Space;
 
+class ShapeMesh {
+	public inline function new(mesh:Mesh, shape:CircleData, height:Float, isSea:Bool) {
+		this.mesh = mesh;
+		this.shape = shape;
+		this.height = height;
+		this.isSea = isSea;
+	}
+	public var mesh:Mesh;
+	public var shape:CircleData;
+	public var height:Float;
+	public var isSea:Bool;
+}
+
 class Main {
 	public static inline var DEGREES_TO_RAD:Float = 0.01745329;
 	public static inline var GAME_VIEWPORT_WIDTH:Float = 800;
-	public static inline var GAME_VIEWPORT_HEIGHT:Float = 500;
+	public static inline var GAME_VIEWPORT_HEIGHT:Float = 600;
 	private static inline var REPO_URL:String = "https://github.com/Tw1ddle/Ludum-Dare-38";
 	private static inline var DEVELOPER_NAME:String = "Sam Twidale";
 	private static inline var TWITTER_URL:String = "https://twitter.com/Sam_Twidale";
@@ -61,7 +85,7 @@ class Main {
 	#end
 	
 	public var worldScene(default, null):Scene = new Scene();
-	public var worldCamera(default, null):PerspectiveCamera;
+	public var worldCamera(default, null):PerspectiveCamera; // TODO add mouse controls
 	
 	private var pointer(default, null):Vector2 = new Vector2(0.0, 0.0);
 	public var signal_clicked(default, null) = new Signal2<Float, Float>();
@@ -69,9 +93,17 @@ class Main {
 	private var gameAttachPoint:Dynamic;
 	private var renderer:WebGLRenderer;
 	public var skyEffectController(default, null):SkyEffectController;
+	private var worldBuilder:WorldBuilder;
+	// TODO add SSAO
+	// TODO add tilt-shift
 	
 	private var lastAnimationTime:Float = 0.0; // Last time from requestAnimationFrame
 	private var dt:Float = 0.0; // Frame delta time
+	
+	private var generator:NameGenerator; // The Markov name generator
+	
+	private var shapes:Array<ShapeMesh> = [];
+	private var worldMapObject:Object3D;
 	
     private static function main():Void {
 		new Main();
@@ -79,6 +111,8 @@ class Main {
 	
 	private inline function new() {
 		Browser.window.onload = onWindowLoaded;
+		
+		worldBuilder = new WorldBuilder();
 	}
 	
 	private inline function onWindowLoaded():Void {
@@ -113,7 +147,7 @@ class Main {
 		// Credits and video link
 		var credits = Browser.document.createElement('div');
 		credits.style.position = 'absolute';
-		credits.style.bottom = '-70px';
+		credits.style.bottom = '-170px';
 		credits.style.width = '100%';
 		credits.style.textAlign = 'center';
 		credits.style.color = '#333333';
@@ -129,6 +163,8 @@ class Main {
 		
 		// Setup cameras
         worldCamera = new PerspectiveCamera(30, GAME_VIEWPORT_WIDTH / GAME_VIEWPORT_HEIGHT, 0.5, 2000000);
+		worldCamera.position.set(0, -1145, -617);
+		worldCamera.rotation.set(1, 0, 0);
 		
 		// Setup world entities
 		skyEffectController = new SkyEffectController(this);
@@ -146,7 +182,54 @@ class Main {
 		#end
 		
 		worldScene.add(skyMesh);
-
+		
+		var seaRgb = Rgba.create(11, 10, 50, 0);
+		var seaRgbTolerance = Rgba.create(20, 20, 20, 0);
+		
+		worldMapObject = new Object3D();
+		worldScene.add(worldMapObject);
+		for (shapeData in worldBuilder.shapes) {
+			
+			var isSea:Bool = colorCloseTo(shapeData.rgb, seaRgb, seaRgbTolerance);
+			var height:Float = isSea ? 1 : perceivedLuminance(shapeData.rgb) * 32;
+			
+			var shape = new ShapeMesh(
+			new Mesh(new CylinderGeometry(shapeData.r, shapeData.r, height, 6, 6),
+			new MeshBasicMaterial({ transparent: true, depthWrite: false, depthTest: false, opacity: 1, color: cast("rgb(" + shapeData.rgb.r + "," + shapeData.rgb.g + "," + shapeData.rgb.b + ")") })),
+			shapeData,
+			height,
+			isSea);
+			shape.mesh.position.set(shapeData.x - GAME_VIEWPORT_WIDTH / 2, GAME_VIEWPORT_HEIGHT / 2 - shapeData.y, 0);
+			
+			worldMapObject.add(shape.mesh);
+			shapes.push(shape);
+		}
+		
+		// TODO add rolling cloud layers that go back and forth slowly
+		
+		// TODO place names
+		// generator = new NameGenerator(data, 3, 0.0);
+		
+		// TODO capitol cities/regional names/per continent
+		// TODO BSP for shapes, n-neighbors?
+		
+		// TODO text
+		// TODO year timelines
+		// TODO newsticker
+		// TODO action buttons
+		
+		// TODO gameover condition
+		// TODO chomsky garbage can video on gameover
+		
+		for (i in 0...shapes.length) {
+			var delay = Math.sqrt(i * 0.05);
+			Actuate.tween(shapes[i].mesh.position, 10, { z: -1378 }).delay(delay).onComplete(function() {
+				if (shapes[i].isSea) {
+					Actuate.tween(shapes[i].mesh.position, 10, { z: -1360 }).repeat().reflect();
+				}
+			});
+		}
+		
 		// Event setup
 		// Window resize event
 		Browser.document.addEventListener('resize', function(event) {
@@ -162,6 +245,7 @@ class Main {
 			// Too precise, use bounding box instead
 			var raycaster = new Raycaster();
 			raycaster.setFromCamera(pointer, worldCamera);
+			// TODO make shape meshes/capitols selectable
 			/*
 			for (selectable in selectableGroup) {
 				var hovereds = raycaster.intersectObjects(selectable.children);
@@ -218,7 +302,7 @@ class Main {
 	private inline function setupGUI():Void {
 		addGUIItem(shaderGUI, skyEffectController, "Sky Shader");
 		addGUIItem(sceneGUI, worldCamera, "World Camera");
-		addGUIItem(sceneGUI, worldScene, "World Scene");
+		addGUIItem(sceneGUI, worldMapObject, "World Scene");
 	}
 	
 	private function addGUIItem(gui:GUI, object:Dynamic, ?tag:String):GUI {
@@ -272,4 +356,28 @@ class Main {
 		return folder;
 	}
 	#end
+	
+	// Returns true if all of the color components are within the given range
+	private function colorCloseTo(color:Rgba, compare:Rgba, range:Rgba = Rgba.create(10, 10, 10, 0)):Bool {
+		var ar = color.r;
+		var ag = color.g;
+		var ab = color.b;
+		var br = compare.r;
+		var bg = compare.g;
+		var bb = compare.b;
+		var rr = range.r;
+		var rg = range.g;
+		var rb = range.b;
+		
+		if (Math.abs(ar - br) < range.r && Math.abs(ag - bg) < range.g && Math.abs(ab - bb) < range.b) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	// Gets perceived luminance of RGB color in 0-1 range
+	private function perceivedLuminance(rgba:Rgba):Float {
+		return (rgba.r * 0.299 + rgba.g * 0.587 + rgba.b * 0.114) / 255;
+	}
 }

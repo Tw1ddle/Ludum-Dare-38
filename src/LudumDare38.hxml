@@ -6,6 +6,7 @@
 -lib actuate
 -lib haxe-kiwi
 -lib lycan
+-lib markov-namegen
 -lib msignal
 -lib nape
 -lib sure
