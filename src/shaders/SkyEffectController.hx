@@ -162,6 +162,8 @@ class SkyEffectController {
 				bloodSky(duration);
 			case "purpleDusk":
 				purpleDusk(duration);
+			case "fakeOcean":
+				fakeOcean(duration);
 			default:
 				trace("Got bad preset, doing nothing...");
 		}
@@ -508,6 +510,54 @@ class SkyEffectController {
 		});
 	}
 	
+	public function fakeOcean(duration:Float = 3):Void {
+		Actuate.tween(this, duration, {
+			turbidity: 6.025,
+			rayleigh: 5.45,
+			mieCoefficient: 0.0072,
+			mieDirectionalG: 0.404,
+			luminance: 1.028,
+			inclination: 0.4897,
+			azimuth: 0.184,
+			refractiveIndex: 1.000106,
+			numMolecules: 2.542e26,
+			depolarizationFactor: -0.191,
+			rayleighZenithLength: 2505,
+			mieV: 3.597,
+			mieZenithLength: 22700,
+			sunIntensityFactor: 1302,
+			sunIntensityFalloffSteepness: 1.34,
+			sunAngularDiameterDegrees: 0.0,
+			tonemapWeighting: 1000
+		}).onUpdate(function() {
+			this.updateUniforms();
+		});
+		
+		Actuate.tween(this.primaries, duration, {
+			x: 7.929e-7,
+			y: 3.766e-7,
+			z: 3.172e-7
+		}).onUpdate(function() {
+			this.updateUniforms();
+		});
+		
+		Actuate.tween(this.mieKCoefficient, duration, {
+			x: 0.686,
+			y: 0.678,
+			z: 0.666
+		}).onUpdate(function() {
+			this.updateUniforms();
+		});
+		
+		Actuate.tween(this.cameraPos, duration, {
+			x: 100000,
+			y: -40000,
+			z: 0
+		}).onUpdate(function() {
+			this.updateUniforms();
+		});
+	}
+	
 	public function addGUIItem(c:SkyEffectController, parentGui:GUI):Void {
 		var controller:SkyEffectController = cast c;
 		
@@ -515,7 +565,7 @@ class SkyEffectController {
 			controller.updateUniforms();
 		};
 		
-		parentGui.add(controller, "preset", ["stellarDawn", "redSunset", "bloodSky", "alienDay", "blueDusk", "purpleDusk"]).listen().onChange(onPresetChanged);
+		parentGui.add(controller, "preset", ["stellarDawn", "redSunset", "bloodSky", "alienDay", "blueDusk", "purpleDusk", "fakeOcean"]).listen().onChange(onPresetChanged);
 		
 		var parametersFolder = parentGui.addFolder("parameters");
 		

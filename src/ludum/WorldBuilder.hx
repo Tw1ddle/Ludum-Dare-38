@@ -19,18 +19,14 @@ typedef CircleData = {
 }
 
 class WorldBuilder {
-	public var shapes:Array<CircleData> = [];
-	
-	public function new() {
-		loadWorld(JsonReader.readFile("assets/world_data.json"));
-	}
-	
-	private function loadWorld(data:String) {
+	public static function loadData(data:String):Array<CircleData> {
+		var shapes:Array<CircleData> = [];
 		var shapeData: { shapes: Array<ShapeData> } = Json.parse(data);
 		for (shape in shapeData.shapes) {
 			var color:Rgba = Rgba.create(shape.color[0], shape.color[1], shape.color[2], 0);
 			var alpha:Float = shape.color[3] / 255.0;
 			shapes.push( { r: shape.data[2], x: shape.data[0], y: shape.data[1], rgb: color, alpha: alpha } );
 		}
+		return shapes;
 	}
 }

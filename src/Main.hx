@@ -36,6 +36,7 @@ import lycan.util.TextFileReader;
 import markov.namegen.NameGenerator;
 
 import motion.Actuate;
+import motion.easing.Quad;
 
 import nape.callbacks.CbEvent;
 import nape.callbacks.CbType;
@@ -93,7 +94,8 @@ class Main {
 	private var gameAttachPoint:Dynamic;
 	private var renderer:WebGLRenderer;
 	public var skyEffectController(default, null):SkyEffectController;
-	private var worldBuilder:WorldBuilder;
+	private var worldShapeData:Array<CircleData>;
+	private var cloudShapeData:Array<CircleData>;
 	// TODO add SSAO
 	// TODO add tilt-shift
 	
@@ -102,8 +104,10 @@ class Main {
 	
 	private var generator:NameGenerator; // The Markov name generator
 	
-	private var shapes:Array<ShapeMesh> = [];
+	private var worldMapShapes:Array<ShapeMesh> = [];
+	private var cloudShapes:Array<ShapeMesh> = [];
 	private var worldMapObject:Object3D;
+	private var cloudsObject:Object3D;
 	
     private static function main():Void {
 		new Main();
@@ -112,7 +116,8 @@ class Main {
 	private inline function new() {
 		Browser.window.onload = onWindowLoaded;
 		
-		worldBuilder = new WorldBuilder();
+		worldShapeData = WorldBuilder.loadData(JsonReader.readFile("assets/world_data.json"));
+		cloudShapeData = WorldBuilder.loadData(JsonReader.readFile("assets/clouds_data.json"));
 	}
 	
 	private inline function onWindowLoaded():Void {
@@ -163,11 +168,12 @@ class Main {
 		
 		// Setup cameras
         worldCamera = new PerspectiveCamera(30, GAME_VIEWPORT_WIDTH / GAME_VIEWPORT_HEIGHT, 0.5, 2000000);
-		worldCamera.position.set(0, -1145, -617);
-		worldCamera.rotation.set(1, 0, 0);
+		worldCamera.position.set(0, 0, 0);
+		worldCamera.rotation.set(0, 0, 3.141);
 		
 		// Setup world entities
 		skyEffectController = new SkyEffectController(this);
+		skyEffectController.fakeOcean(0);
 		
 		var skyMaterial = new ShaderMaterial( {
 			fragmentShader: SkyShader.fragmentShader,
@@ -187,25 +193,49 @@ class Main {
 		var seaRgbTolerance = Rgba.create(20, 20, 20, 0);
 		
 		worldMapObject = new Object3D();
+		worldMapObject.position.set( -GAME_VIEWPORT_WIDTH / 2, -1260, -804);
+		worldMapObject.rotation.set(3.141 / 3, 0, 0);
 		worldScene.add(worldMapObject);
-		for (shapeData in worldBuilder.shapes) {
+		
+		cloudsObject = new Object3D();
+		cloudsObject.position.set( -GAME_VIEWPORT_WIDTH / 2, -1400, -464);
+		cloudsObject.rotation.set(3.141 / 3, 0, 0);
+		worldScene.add(cloudsObject);
+		
+		for (shapeData in worldShapeData) {
 			
 			var isSea:Bool = colorCloseTo(shapeData.rgb, seaRgb, seaRgbTolerance);
+			if (isSea) {
+				shapeData.alpha = 0.2; // TODO vignette edges?
+				continue; // TODO or just leave out?
+			}
+			
 			var height:Float = isSea ? 1 : perceivedLuminance(shapeData.rgb) * 32;
 			
 			var shape = new ShapeMesh(
 			new Mesh(new CylinderGeometry(shapeData.r, shapeData.r, height, 6, 6),
-			new MeshBasicMaterial({ transparent: true, depthWrite: false, depthTest: false, opacity: 1, color: cast("rgb(" + shapeData.rgb.r + "," + shapeData.rgb.g + "," + shapeData.rgb.b + ")") })),
+			new MeshBasicMaterial({ transparent: true, depthWrite: false, depthTest: false, opacity: shapeData.alpha, color: cast("rgb(" + shapeData.rgb.r + "," + shapeData.rgb.g + "," + shapeData.rgb.b + ")") })),
 			shapeData,
 			height,
 			isSea);
-			shape.mesh.position.set(shapeData.x - GAME_VIEWPORT_WIDTH / 2, GAME_VIEWPORT_HEIGHT / 2 - shapeData.y, 0);
+			shape.mesh.position.set(shapeData.x, shapeData.y, 0);
 			
 			worldMapObject.add(shape.mesh);
-			shapes.push(shape);
+			worldMapShapes.push(shape);
 		}
 		
-		// TODO add rolling cloud layers that go back and forth slowly
+		for (shapeData in cloudShapeData) {
+			var shape = new ShapeMesh(
+			new Mesh(new CircleBufferGeometry(shapeData.r, 8),
+			new MeshBasicMaterial({ transparent: true, depthWrite: false, depthTest: false, opacity: shapeData.alpha, color: cast("rgb(" + shapeData.rgb.r + "," + shapeData.rgb.g + "," + shapeData.rgb.b + ")") })),
+			shapeData,
+			16,
+			false);
+			shape.mesh.position.set(shapeData.x, shapeData.y, 0);
+			
+			cloudsObject.add(shape.mesh);
+			cloudShapes.push(shape);
+		}
 		
 		// TODO place names
 		// generator = new NameGenerator(data, 3, 0.0);
@@ -219,13 +249,13 @@ class Main {
 		// TODO action buttons
 		
 		// TODO gameover condition
-		// TODO chomsky garbage can video on gameover
+		// TODO chomsky garbage can video on gameover?
 		
 		for (i in 0...shapes.length) {
-			var delay = Math.sqrt(i * 0.05);
-			Actuate.tween(shapes[i].mesh.position, 10, { z: -1378 }).delay(delay).onComplete(function() {
+			var delay = Math.sqrt(shapes[i].mesh.position.y * 0.05);
+			Actuate.tween(shapes[i].mesh.position, 2.5 + delay / 4 + Math.random(), { z: -1378 }).ease(Quad.easeInOut).delay(delay).onComplete(function() {
 				if (shapes[i].isSea) {
-					Actuate.tween(shapes[i].mesh.position, 10, { z: -1360 }).repeat().reflect();
+					Actuate.tween(shapes[i].mesh.position, 10, { z: -1400 }).repeat().reflect().ease(Quad.easeInOut);
 				}
 			});
 		}
@@ -245,7 +275,8 @@ class Main {
 			// Too precise, use bounding box instead
 			var raycaster = new Raycaster();
 			raycaster.setFromCamera(pointer, worldCamera);
-			// TODO make shape meshes/capitols selectable
+			// TODO make shape meshes/capitols hoverable
+			// TODO tween shape up a bit on hover enter/exit
 			/*
 			for (selectable in selectableGroup) {
 				var hovereds = raycaster.intersectObjects(selectable.children);
@@ -302,7 +333,8 @@ class Main {
 	private inline function setupGUI():Void {
 		addGUIItem(shaderGUI, skyEffectController, "Sky Shader");
 		addGUIItem(sceneGUI, worldCamera, "World Camera");
-		addGUIItem(sceneGUI, worldMapObject, "World Scene");
+		addGUIItem(sceneGUI, worldMapObject, "World Map");
+		addGUIItem(sceneGUI, cloudsObject, "Clouds");
 	}
 	
 	private function addGUIItem(gui:GUI, object:Dynamic, ?tag:String):GUI {
