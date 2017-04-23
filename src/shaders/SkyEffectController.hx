@@ -67,7 +67,7 @@ class SkyEffectController {
 		updateUniforms();
 		
 		presetTransitionDuration = 5.0;
-		preset = "stellarDawn";
+		preset = "redSunset";
 	}
 	
 	private inline function setInitialValues():Void {
@@ -150,18 +150,8 @@ class SkyEffectController {
 	
 	public function presetChanged(preset:String, duration:Float = 3):Void {
 		switch(preset) {
-			case "stellarDawn":
-				stellarDawn(duration);
 			case "redSunset":
 				redSunset(duration);
-			case "alienDay":
-				alienDay(duration);
-			case "blueDusk":
-				blueDusk(duration);
-			case "bloodSky":
-				bloodSky(duration);
-			case "purpleDusk":
-				purpleDusk(duration);
 			case "fakeOcean":
 				fakeOcean(duration);
 			default:
@@ -171,55 +161,6 @@ class SkyEffectController {
 	
 	public function onPresetChanged(preset:String):Void {
 		presetChanged(preset);
-	}
-	
-	// Presets
-	public function stellarDawn(duration:Float = 3):Void {
-		Actuate.tween(this, duration, {
-			turbidity: 1.25,
-			rayleigh: 1.00,
-			mieCoefficient: 0.00335,
-			mieDirectionalG: 0.787,
-			luminance: 1.0,
-			inclination: 0.4945,
-			azimuth: 0.2508,
-			refractiveIndex: 1.000317,
-			numMolecules: 2.542e25,
-			depolarizationFactor: 0.067,
-			rayleighZenithLength: 615,
-			mieV: 4.012,
-			mieZenithLength: 500,
-			sunIntensityFactor: 1111,
-			sunIntensityFalloffSteepness: 0.98,
-			sunAngularDiameterDegrees: 0.00758,
-			tonemapWeighting: 1000
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.primaries, duration, {
-			x: 6.8e-7,
-			y: 5.5e-7,
-			z: 4.5e-7
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.mieKCoefficient, duration, {
-			x: 0.686,
-			y: 0.678,
-			z: 0.666
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.cameraPos, duration, {
-			x: 100000,
-			y: -40000,
-			z: 0
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
 	}
 	
 	public function redSunset(duration:Float = 3):Void {
@@ -239,7 +180,7 @@ class SkyEffectController {
 			mieZenithLength: 34000,
 			sunIntensityFactor: 1000,
 			sunIntensityFalloffSteepness: 1.5,
-			sunAngularDiameterDegrees: 0.00933,
+			sunAngularDiameterDegrees: 0.0,
 			tonemapWeighting: 1000
 		}).onUpdate(function() {
 			this.updateUniforms();
@@ -249,246 +190,6 @@ class SkyEffectController {
 			x: 6.8e-7,
 			y: 5.5e-7,
 			z: 4.5e-7
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.mieKCoefficient, duration, {
-			x: 0.686,
-			y: 0.678,
-			z: 0.666
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.cameraPos, duration, {
-			x: 100000,
-			y: -40000,
-			z: 0
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-	}
-	
-	public function alienDay(duration:Float = 3):Void {
-		Actuate.tween(this, duration, {
-			turbidity: 12.575,
-			rayleigh: 5.75,
-			mieCoefficient: 0.0074,
-			mieDirectionalG: 0.468,
-			luminance: 1.00,
-			inclination: 0.4901,
-			azimuth: 0.1866,
-			refractiveIndex: 1.000128,
-			numMolecules: 2.542e25,
-			depolarizationFactor: 0.137,
-			rayleighZenithLength: 3795,
-			mieV: 4.007,
-			mieZenithLength: 7100,
-			sunIntensityFactor: 1024,
-			sunIntensityFalloffSteepness: 1.4,
-			sunAngularDiameterDegrees: 0.006,
-			tonemapWeighting: 1000
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.primaries, duration, {
-			x: 6.8e-7,
-			y: 5.5e-7,
-			z: 4.5e-7
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.mieKCoefficient, duration, {
-			x: 0.686,
-			y: 0.678,
-			z: 0.666
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.cameraPos, duration, {
-			x: 100000,
-			y: -40000,
-			z: 0
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-	}
-	
-	public function blueDusk(duration:Float = 3):Void {
-		Actuate.tween(this, duration, {
-			turbidity: 2.5,
-			rayleigh: 2.295,
-			mieCoefficient: 0.011475,
-			mieDirectionalG: 0.814,
-			luminance: 1.00,
-			inclination: 0.4987,
-			azimuth: 0.2268,
-			refractiveIndex: 1.000262,
-			numMolecules: 2.542e25,
-			depolarizationFactor: 0.095,
-			rayleighZenithLength: 540,
-			mieV: 3.979,
-			mieZenithLength: 1000,
-			sunIntensityFactor: 1151,
-			sunIntensityFalloffSteepness: 1.22,
-			sunAngularDiameterDegrees: 0.00639,
-			tonemapWeighting: 1000
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.primaries, duration, {
-			x: 6.8e-7,
-			y: 5.5e-7,
-			z: 4.5e-7
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.mieKCoefficient, duration, {
-			x: 0.686,
-			y: 0.678,
-			z: 0.666
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.cameraPos, duration, {
-			x: 100000,
-			y: -40000,
-			z: 0
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-	}
-	
-	public function purpleDusk(duration:Float = 3):Void {
-		Actuate.tween(this, duration, {
-			turbidity: 3.6,
-			rayleigh: 2.26,
-			mieCoefficient: 0.005,
-			mieDirectionalG: 0.822,
-			luminance: 1.00,
-			inclination: 0.502,
-			azimuth: 0.2883,
-			refractiveIndex: 1.000294,
-			numMolecules: 2.542e25,
-			depolarizationFactor: 0.068,
-			rayleighZenithLength: 12045,
-			mieV: 3.976,
-			mieZenithLength: 34000,
-			sunIntensityFactor: 1631,
-			sunIntensityFalloffSteepness: 1.5,
-			sunAngularDiameterDegrees: 0.00933,
-			tonemapWeighting: 1000
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.primaries, duration, {
-			x: 7.5e-7,
-			y: 4.5e-7,
-			z: 5.1e-7
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.mieKCoefficient, duration, {
-			x: 0.686,
-			y: 0.678,
-			z: 0.666
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.cameraPos, duration, {
-			x: 100000,
-			y: -40000,
-			z: 0
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-	}
-	
-	public function bloodSky(duration:Float = 3):Void {
-		Actuate.tween(this, duration, {
-			turbidity: 4.75,
-			rayleigh: 6.77,
-			mieCoefficient: 0.0191,
-			mieDirectionalG: 0.793,
-			luminance: 1.1735,
-			inclination: 0.4956,
-			azimuth: 0.2174,
-			refractiveIndex: 1.000633,
-			numMolecules: 2.542e25,
-			depolarizationFactor: 0.01,
-			rayleighZenithLength: 1425,
-			mieV: 4.042,
-			mieZenithLength: 1600,
-			sunIntensityFactor: 2069,
-			sunIntensityFalloffSteepness: 2.26,
-			sunAngularDiameterDegrees: 0.01487,
-			tonemapWeighting: 1000
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.primaries, duration, {
-			x: 7.929e-7,
-			y: 3.766e-7,
-			z: 3.172e-7
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.mieKCoefficient, duration, {
-			x: 0.686,
-			y: 0.678,
-			z: 0.666
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.cameraPos, duration, {
-			x: 100000,
-			y: -40000,
-			z: 0
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-	}
-	
-	public function randomSky(duration:Float = 3):Void {
-		Actuate.tween(this, duration, {
-			turbidity: 4.75,
-			rayleigh: 6.77,
-			mieCoefficient: 0.0191,
-			mieDirectionalG: 0.793,
-			luminance: 1.1735,
-			inclination: 0.4956,
-			azimuth: 0.2174,
-			refractiveIndex: 1.000633,
-			numMolecules: 2.542e25,
-			depolarizationFactor: 0.01,
-			rayleighZenithLength: 1425,
-			mieV: 4.042,
-			mieZenithLength: 1600,
-			sunIntensityFactor: 2069,
-			sunIntensityFalloffSteepness: 2.26,
-			sunAngularDiameterDegrees: 0.01487,
-			tonemapWeighting: 1000
-		}).onUpdate(function() {
-			this.updateUniforms();
-		});
-		
-		Actuate.tween(this.primaries, duration, {
-			x: 7.929e-7,
-			y: 3.766e-7,
-			z: 3.172e-7
 		}).onUpdate(function() {
 			this.updateUniforms();
 		});
@@ -565,7 +266,7 @@ class SkyEffectController {
 			controller.updateUniforms();
 		};
 		
-		parentGui.add(controller, "preset", ["stellarDawn", "redSunset", "bloodSky", "alienDay", "blueDusk", "purpleDusk", "fakeOcean"]).listen().onChange(onPresetChanged);
+		parentGui.add(controller, "preset", ["redSunset", "fakeOcean"]).listen().onChange(onPresetChanged);
 		
 		var parametersFolder = parentGui.addFolder("parameters");
 		

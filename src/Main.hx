@@ -37,6 +37,7 @@ import markov.namegen.NameGenerator;
 
 import motion.Actuate;
 import motion.easing.Quad;
+import motion.easing.Expo;
 
 import nape.callbacks.CbEvent;
 import nape.callbacks.CbType;
@@ -63,6 +64,8 @@ class ShapeMesh {
 	public var shape:CircleData;
 	public var height:Float;
 	public var isSea:Bool;
+	
+	//public var normalizedCoordinates:{x:Int, y:Int};
 }
 
 class Main {
@@ -168,8 +171,10 @@ class Main {
 		
 		// Setup cameras
         worldCamera = new PerspectiveCamera(30, GAME_VIEWPORT_WIDTH / GAME_VIEWPORT_HEIGHT, 0.5, 2000000);
-		worldCamera.position.set(0, 0, 0);
-		worldCamera.rotation.set(0, 0, 3.141);
+		worldCamera.position.set(-6, 54, -62);
+		worldCamera.rotation.set(-0.0125, -0.0125, 3.53);
+		Actuate.tween(worldCamera.rotation, 10, { x: worldCamera.rotation.x + 0.025, y: worldCamera.rotation.y + 0.025, z: worldCamera.rotation.z + 0.01 }).ease(Quad.easeInOut).reflect().repeat();
+		Actuate.tween(worldCamera.position, 7, { z: worldCamera.position.z + 10 }).ease(Quad.easeInOut).reflect().repeat();
 		
 		// Setup world entities
 		skyEffectController = new SkyEffectController(this);
@@ -193,14 +198,16 @@ class Main {
 		var seaRgbTolerance = Rgba.create(20, 20, 20, 0);
 		
 		worldMapObject = new Object3D();
-		worldMapObject.position.set( -GAME_VIEWPORT_WIDTH / 2, -1260, -804);
+		worldMapObject.position.set( -360, -1145, -1084);
 		worldMapObject.rotation.set(3.141 / 3, 0, 0);
 		worldScene.add(worldMapObject);
 		
 		cloudsObject = new Object3D();
-		cloudsObject.position.set( -GAME_VIEWPORT_WIDTH / 2, -1400, -464);
-		cloudsObject.rotation.set(3.141 / 3, 0, 0);
+		cloudsObject.position.set(-1500, -1800, -3042);
+		cloudsObject.rotation.set(0.2, 0, 0);
+		cloudsObject.scale.set(3.1, 3.1, 1.0);
 		worldScene.add(cloudsObject);
+		Actuate.tween(cloudsObject.position, 30, { x: cloudsObject.position.x - 2000, y: cloudsObject.position.y - 50 }).ease(Quad.easeInOut).reflect().repeat();
 		
 		for (shapeData in worldShapeData) {
 			
@@ -248,16 +255,48 @@ class Main {
 		// TODO newsticker
 		// TODO action buttons
 		
+		// TODO ocean pollution
+		// TODO cloud polllution
+		// TODO tile pollution
+		// TODO skyscrapers
+		
 		// TODO gameover condition
 		// TODO chomsky garbage can video on gameover?
 		
-		for (i in 0...shapes.length) {
-			var delay = Math.sqrt(shapes[i].mesh.position.y * 0.05);
-			Actuate.tween(shapes[i].mesh.position, 2.5 + delay / 4 + Math.random(), { z: -1378 }).ease(Quad.easeInOut).delay(delay).onComplete(function() {
-				if (shapes[i].isSea) {
-					Actuate.tween(shapes[i].mesh.position, 10, { z: -1400 }).repeat().reflect().ease(Quad.easeInOut);
+		var maxWorldMapTime:Float = 0;
+		var firstWorldShapeTime:Float = 0;
+		var lastWorldShapeTime:Float = 0;
+		for (i in 0...worldMapShapes.length) {
+			var delay = Math.sqrt(worldMapShapes[i].mesh.position.y * 0.05);
+			if (firstWorldShapeTime > delay) {
+				firstWorldShapeTime = delay;
+			}
+			if (lastWorldShapeTime < delay) {
+				lastWorldShapeTime = delay;
+			}
+			
+			var duration = 2.5 + delay / 4 + Math.random();
+			var opacity:Float = worldMapShapes[i].mesh.material.opacity;
+			worldMapShapes[i].mesh.material.opacity = 0.0;
+			Actuate.tween(worldMapShapes[i].mesh.material, duration, { opacity: opacity }).ease(Quad.easeIn).delay(delay);
+			Actuate.tween(worldMapShapes[i].mesh.position, duration, { z: -1378 }).ease(Expo.easeInOut).delay(delay).onComplete(function() {
+				if (worldMapShapes[i].isSea) {
+					Actuate.tween(worldMapShapes[i].mesh.position, 10, { z: -1400 }).repeat().reflect().ease(Quad.easeInOut);
 				}
 			});
+			
+			if (delay + duration > maxWorldMapTime) {
+				maxWorldMapTime = delay + duration;
+			}
+		}
+		Actuate.timer(firstWorldShapeTime).onComplete(function() { skyEffectController.redSunset(120); });
+		
+		for (cloud in cloudShapes) {
+			var delay = lastWorldShapeTime + Math.sqrt(cloud.mesh.position.y * 0.025);
+			var tmpOpacity = cloud.mesh.material.opacity;
+			cloud.mesh.material.opacity = 0.0;
+			cloud.mesh.position.z = -1378;
+			Actuate.tween(cloud.mesh.material, 1, { opacity: tmpOpacity }).ease(Expo.easeIn).delay(delay);
 		}
 		
 		// Event setup
