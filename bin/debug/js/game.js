@@ -28,7 +28,8 @@ ShapeMesh.prototype = {
 	__class__: ShapeMesh
 };
 var Main = function() {
-	this.shapes = [];
+	this.cloudShapes = [];
+	this.worldMapShapes = [];
 	this.dt = 0.0;
 	this.lastAnimationTime = 0.0;
 	this.signal_clicked = new msignal_Signal2();
@@ -86,8 +87,10 @@ Main.prototype = {
 		this.renderer.setSize(800,600);
 		this.renderer.setClearColor(new THREE.Color(2236962));
 		this.worldCamera = new THREE.PerspectiveCamera(30,1.3333333333333333,0.5,2000000);
-		this.worldCamera.position.set(0,0,0);
-		this.worldCamera.rotation.set(0,0,3.141);
+		this.worldCamera.position.set(-6,54,-62);
+		this.worldCamera.rotation.set(-0.0125,-0.0125,3.53);
+		motion_Actuate.tween(this.worldCamera.rotation,10,{ x : this.worldCamera.rotation.x + 0.025, y : this.worldCamera.rotation.y + 0.025, z : this.worldCamera.rotation.z + 0.01}).ease(motion_easing_Quad.get_easeInOut()).reflect().repeat();
+		motion_Actuate.tween(this.worldCamera.position,7,{ z : this.worldCamera.position.z + 10}).ease(motion_easing_Quad.get_easeInOut()).reflect().repeat();
 		this.skyEffectController = new shaders_SkyEffectController(this);
 		this.skyEffectController.fakeOcean(0);
 		var skyMaterial = new THREE.ShaderMaterial({ fragmentShader : shaders_SkyShader.fragmentShader, vertexShader : shaders_SkyShader.vertexShader, uniforms : shaders_SkyShader.uniforms, side : THREE.BackSide});
@@ -97,13 +100,15 @@ Main.prototype = {
 		var seaRgb = 185217536;
 		var seaRgbTolerance = 336860160;
 		this.worldMapObject = new THREE.Object3D();
-		this.worldMapObject.position.set(-400.,-1260,-804);
+		this.worldMapObject.position.set(-360,-1145,-1084);
 		this.worldMapObject.rotation.set(1.047,0,0);
 		this.worldScene.add(this.worldMapObject);
 		this.cloudsObject = new THREE.Object3D();
-		this.cloudsObject.position.set(-400.,-1400,-464);
-		this.cloudsObject.rotation.set(1.047,0,0);
+		this.cloudsObject.position.set(-1500,-1800,-3042);
+		this.cloudsObject.rotation.set(0.2,0,0);
+		this.cloudsObject.scale.set(3.1,3.1,1.0);
 		this.worldScene.add(this.cloudsObject);
+		motion_Actuate.tween(this.cloudsObject.position,30,{ x : this.cloudsObject.position.x - 2000, y : this.cloudsObject.position.y - 50}).ease(motion_easing_Quad.get_easeInOut()).reflect().repeat();
 		var _g = 0;
 		var _g1 = this.worldShapeData;
 		while(_g < _g1.length) {
@@ -118,7 +123,7 @@ Main.prototype = {
 			var shape = new ShapeMesh(new THREE.Mesh(new THREE.CylinderGeometry(shapeData.r,shapeData.r,height,6,6),new THREE.MeshBasicMaterial({ transparent : true, depthWrite : false, depthTest : false, opacity : shapeData.alpha, color : "rgb(" + (shapeData.rgb >>> 24 & 255) + "," + (shapeData.rgb >>> 16 & 255) + "," + (shapeData.rgb >>> 8 & 255) + ")"})),shapeData,height,isSea);
 			shape.mesh.position.set(shapeData.x,shapeData.y,0);
 			this.worldMapObject.add(shape.mesh);
-			this.shapes.push(shape);
+			this.worldMapShapes.push(shape);
 		}
 		var _g2 = 0;
 		var _g11 = this.cloudShapeData;
@@ -128,20 +133,50 @@ Main.prototype = {
 			var shape1 = new ShapeMesh(new THREE.Mesh(new THREE.CircleBufferGeometry(shapeData1.r,8),new THREE.MeshBasicMaterial({ transparent : true, depthWrite : false, depthTest : false, opacity : shapeData1.alpha, color : "rgb(" + (shapeData1.rgb >>> 24 & 255) + "," + (shapeData1.rgb >>> 16 & 255) + "," + (shapeData1.rgb >>> 8 & 255) + ")"})),shapeData1,16,false);
 			shape1.mesh.position.set(shapeData1.x,shapeData1.y,0);
 			this.cloudsObject.add(shape1.mesh);
-			this.shapes.push(shape1);
+			this.cloudShapes.push(shape1);
 		}
+		var maxWorldMapTime = 0;
+		var firstWorldShapeTime = 0;
+		var lastWorldShapeTime = 0;
 		var _g12 = 0;
-		var _g3 = this.shapes.length;
+		var _g3 = this.worldMapShapes.length;
 		while(_g12 < _g3) {
 			var i = [_g12++];
-			var delay = Math.sqrt(this.shapes[i[0]].mesh.position.y * 0.05);
-			motion_Actuate.tween(this.shapes[i[0]].mesh.position,2.5 + delay / 4 + Math.random(),{ z : -1378}).ease(motion_easing_Quad.get_easeInOut()).delay(delay).onComplete((function(i1) {
+			var delay = Math.sqrt(this.worldMapShapes[i[0]].mesh.position.y * 0.05);
+			if(firstWorldShapeTime > delay) {
+				firstWorldShapeTime = delay;
+			}
+			if(lastWorldShapeTime < delay) {
+				lastWorldShapeTime = delay;
+			}
+			var duration = 2.5 + delay / 4 + Math.random();
+			var opacity = this.worldMapShapes[i[0]].mesh.material.opacity;
+			this.worldMapShapes[i[0]].mesh.material.opacity = 0.0;
+			motion_Actuate.tween(this.worldMapShapes[i[0]].mesh.material,duration,{ opacity : opacity}).ease(motion_easing_Quad.get_easeIn()).delay(delay);
+			motion_Actuate.tween(this.worldMapShapes[i[0]].mesh.position,duration,{ z : -1378}).ease(motion_easing_Expo.get_easeInOut()).delay(delay).onComplete((function(i1) {
 				return function() {
-					if(_gthis.shapes[i1[0]].isSea) {
-						motion_Actuate.tween(_gthis.shapes[i1[0]].mesh.position,10,{ z : -1400}).repeat().reflect().ease(motion_easing_Quad.get_easeInOut());
+					if(_gthis.worldMapShapes[i1[0]].isSea) {
+						motion_Actuate.tween(_gthis.worldMapShapes[i1[0]].mesh.position,10,{ z : -1400}).repeat().reflect().ease(motion_easing_Quad.get_easeInOut());
 					}
 				};
 			})(i));
+			if(delay + duration > maxWorldMapTime) {
+				maxWorldMapTime = delay + duration;
+			}
+		}
+		motion_Actuate.timer(firstWorldShapeTime).onComplete(function() {
+			_gthis.skyEffectController.redSunset(120);
+		});
+		var _g4 = 0;
+		var _g13 = this.cloudShapes;
+		while(_g4 < _g13.length) {
+			var cloud = _g13[_g4];
+			++_g4;
+			var delay1 = lastWorldShapeTime + Math.sqrt(cloud.mesh.position.y * 0.025);
+			var tmpOpacity = cloud.mesh.material.opacity;
+			cloud.mesh.material.opacity = 0.0;
+			cloud.mesh.position.z = -1378;
+			motion_Actuate.tween(cloud.mesh.material,1,{ opacity : tmpOpacity}).ease(motion_easing_Expo.get_easeIn()).delay(delay1);
 		}
 		window.document.addEventListener("resize",function(event) {
 		},false);
@@ -1169,7 +1204,13 @@ motion_actuators_SimpleActuator.prototype = $extend(motion_actuators_GenericActu
 });
 var motion_easing_Expo = function() { };
 motion_easing_Expo.__name__ = true;
-motion_easing_Expo.__properties__ = {get_easeOut:"get_easeOut"};
+motion_easing_Expo.__properties__ = {get_easeOut:"get_easeOut",get_easeInOut:"get_easeInOut",get_easeIn:"get_easeIn"};
+motion_easing_Expo.get_easeIn = function() {
+	return new motion_easing_ExpoEaseIn();
+};
+motion_easing_Expo.get_easeInOut = function() {
+	return new motion_easing_ExpoEaseInOut();
+};
 motion_easing_Expo.get_easeOut = function() {
 	return new motion_easing_ExpoEaseOut();
 };
@@ -1250,6 +1291,9 @@ motion_Actuate.stop = function(target,properties,complete,sendEvent) {
 		}
 	}
 };
+motion_Actuate.timer = function(duration,customActuator) {
+	return motion_Actuate.tween(new motion__$Actuate_TweenTimer(0),duration,new motion__$Actuate_TweenTimer(1),false,customActuator);
+};
 motion_Actuate.tween = function(target,duration,properties,overwrite,customActuator) {
 	if(overwrite == null) {
 		overwrite = true;
@@ -1286,6 +1330,13 @@ motion_Actuate.unload = function(actuator) {
 			motion_Actuate.targetLibraries.remove(target);
 		}
 	}
+};
+var motion__$Actuate_TweenTimer = function(progress) {
+	this.progress = progress;
+};
+motion__$Actuate_TweenTimer.__name__ = true;
+motion__$Actuate_TweenTimer.prototype = {
+	__class__: motion__$Actuate_TweenTimer
 };
 var motion_IComponentPath = function() { };
 motion_IComponentPath.__name__ = true;
@@ -1547,11 +1598,57 @@ motion_actuators_PropertyPathDetails.__super__ = motion_actuators_PropertyDetail
 motion_actuators_PropertyPathDetails.prototype = $extend(motion_actuators_PropertyDetails.prototype,{
 	__class__: motion_actuators_PropertyPathDetails
 });
+var motion_easing_ExpoEaseIn = function() {
+};
+motion_easing_ExpoEaseIn.__name__ = true;
+motion_easing_ExpoEaseIn.__interfaces__ = [motion_easing_IEasing];
+motion_easing_ExpoEaseIn.prototype = {
+	calculate: function(k) {
+		if(k == 0) {
+			return 0;
+		} else {
+			return Math.pow(2,10 * (k - 1));
+		}
+	}
+	,__class__: motion_easing_ExpoEaseIn
+};
+var motion_easing_ExpoEaseInOut = function() {
+};
+motion_easing_ExpoEaseInOut.__name__ = true;
+motion_easing_ExpoEaseInOut.__interfaces__ = [motion_easing_IEasing];
+motion_easing_ExpoEaseInOut.prototype = {
+	calculate: function(k) {
+		if(k == 0) {
+			return 0;
+		}
+		if(k == 1) {
+			return 1;
+		}
+		if((k /= 0.5) < 1.0) {
+			return 0.5 * Math.pow(2,10 * (k - 1));
+		}
+		return 0.5 * (2 - Math.pow(2,-10 * --k));
+	}
+	,__class__: motion_easing_ExpoEaseInOut
+};
 var motion_easing_Quad = function() { };
 motion_easing_Quad.__name__ = true;
-motion_easing_Quad.__properties__ = {get_easeInOut:"get_easeInOut"};
+motion_easing_Quad.__properties__ = {get_easeInOut:"get_easeInOut",get_easeIn:"get_easeIn"};
+motion_easing_Quad.get_easeIn = function() {
+	return new motion_easing_QuadEaseIn();
+};
 motion_easing_Quad.get_easeInOut = function() {
 	return new motion_easing_QuadEaseInOut();
+};
+var motion_easing_QuadEaseIn = function() {
+};
+motion_easing_QuadEaseIn.__name__ = true;
+motion_easing_QuadEaseIn.__interfaces__ = [motion_easing_IEasing];
+motion_easing_QuadEaseIn.prototype = {
+	calculate: function(k) {
+		return k * k;
+	}
+	,__class__: motion_easing_QuadEaseIn
 };
 var motion_easing_QuadEaseInOut = function() {
 };
@@ -6641,7 +6738,7 @@ var shaders_SkyEffectController = function(main) {
 	this.tonemapWeighting = 1000.0;
 	this.updateUniforms();
 	this.presetTransitionDuration = 5.0;
-	this.set_preset("stellarDawn");
+	this.set_preset("redSunset");
 };
 shaders_SkyEffectController.__name__ = true;
 shaders_SkyEffectController.prototype = {
@@ -6677,26 +6774,11 @@ shaders_SkyEffectController.prototype = {
 			duration = 3;
 		}
 		switch(preset) {
-		case "alienDay":
-			this.alienDay(duration);
-			break;
-		case "bloodSky":
-			this.bloodSky(duration);
-			break;
-		case "blueDusk":
-			this.blueDusk(duration);
-			break;
 		case "fakeOcean":
 			this.fakeOcean(duration);
 			break;
-		case "purpleDusk":
-			this.purpleDusk(duration);
-			break;
 		case "redSunset":
 			this.redSunset(duration);
-			break;
-		case "stellarDawn":
-			this.stellarDawn(duration);
 			break;
 		default:
 			console.log("Got bad preset, doing nothing...");
@@ -6705,105 +6787,15 @@ shaders_SkyEffectController.prototype = {
 	,onPresetChanged: function(preset) {
 		this.presetChanged(preset);
 	}
-	,stellarDawn: function(duration) {
-		if(duration == null) {
-			duration = 3;
-		}
-		var _gthis = this;
-		motion_Actuate.tween(this,duration,{ turbidity : 1.25, rayleigh : 1.00, mieCoefficient : 0.00335, mieDirectionalG : 0.787, luminance : 1.0, inclination : 0.4945, azimuth : 0.2508, refractiveIndex : 1.000317, numMolecules : 2.542e25, depolarizationFactor : 0.067, rayleighZenithLength : 615, mieV : 4.012, mieZenithLength : 500, sunIntensityFactor : 1111, sunIntensityFalloffSteepness : 0.98, sunAngularDiameterDegrees : 0.00758, tonemapWeighting : 1000}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-		motion_Actuate.tween(this.primaries,duration,{ x : 6.8e-7, y : 5.5e-7, z : 4.5e-7}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-		motion_Actuate.tween(this.mieKCoefficient,duration,{ x : 0.686, y : 0.678, z : 0.666}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-		motion_Actuate.tween(this.cameraPos,duration,{ x : 100000, y : -40000, z : 0}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-	}
 	,redSunset: function(duration) {
 		if(duration == null) {
 			duration = 3;
 		}
 		var _gthis = this;
-		motion_Actuate.tween(this,duration,{ turbidity : 4.7, rayleigh : 2.28, mieCoefficient : 0.005, mieDirectionalG : 0.82, luminance : 1.00, inclination : 0.4983, azimuth : 0.1979, refractiveIndex : 1.00029, numMolecules : 2.542e25, depolarizationFactor : 0.02, rayleighZenithLength : 8400, mieV : 3.936, mieZenithLength : 34000, sunIntensityFactor : 1000, sunIntensityFalloffSteepness : 1.5, sunAngularDiameterDegrees : 0.00933, tonemapWeighting : 1000}).onUpdate(function() {
+		motion_Actuate.tween(this,duration,{ turbidity : 4.7, rayleigh : 2.28, mieCoefficient : 0.005, mieDirectionalG : 0.82, luminance : 1.00, inclination : 0.4983, azimuth : 0.1979, refractiveIndex : 1.00029, numMolecules : 2.542e25, depolarizationFactor : 0.02, rayleighZenithLength : 8400, mieV : 3.936, mieZenithLength : 34000, sunIntensityFactor : 1000, sunIntensityFalloffSteepness : 1.5, sunAngularDiameterDegrees : 0.0, tonemapWeighting : 1000}).onUpdate(function() {
 			_gthis.updateUniforms();
 		});
 		motion_Actuate.tween(this.primaries,duration,{ x : 6.8e-7, y : 5.5e-7, z : 4.5e-7}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-		motion_Actuate.tween(this.mieKCoefficient,duration,{ x : 0.686, y : 0.678, z : 0.666}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-		motion_Actuate.tween(this.cameraPos,duration,{ x : 100000, y : -40000, z : 0}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-	}
-	,alienDay: function(duration) {
-		if(duration == null) {
-			duration = 3;
-		}
-		var _gthis = this;
-		motion_Actuate.tween(this,duration,{ turbidity : 12.575, rayleigh : 5.75, mieCoefficient : 0.0074, mieDirectionalG : 0.468, luminance : 1.00, inclination : 0.4901, azimuth : 0.1866, refractiveIndex : 1.000128, numMolecules : 2.542e25, depolarizationFactor : 0.137, rayleighZenithLength : 3795, mieV : 4.007, mieZenithLength : 7100, sunIntensityFactor : 1024, sunIntensityFalloffSteepness : 1.4, sunAngularDiameterDegrees : 0.006, tonemapWeighting : 1000}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-		motion_Actuate.tween(this.primaries,duration,{ x : 6.8e-7, y : 5.5e-7, z : 4.5e-7}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-		motion_Actuate.tween(this.mieKCoefficient,duration,{ x : 0.686, y : 0.678, z : 0.666}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-		motion_Actuate.tween(this.cameraPos,duration,{ x : 100000, y : -40000, z : 0}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-	}
-	,blueDusk: function(duration) {
-		if(duration == null) {
-			duration = 3;
-		}
-		var _gthis = this;
-		motion_Actuate.tween(this,duration,{ turbidity : 2.5, rayleigh : 2.295, mieCoefficient : 0.011475, mieDirectionalG : 0.814, luminance : 1.00, inclination : 0.4987, azimuth : 0.2268, refractiveIndex : 1.000262, numMolecules : 2.542e25, depolarizationFactor : 0.095, rayleighZenithLength : 540, mieV : 3.979, mieZenithLength : 1000, sunIntensityFactor : 1151, sunIntensityFalloffSteepness : 1.22, sunAngularDiameterDegrees : 0.00639, tonemapWeighting : 1000}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-		motion_Actuate.tween(this.primaries,duration,{ x : 6.8e-7, y : 5.5e-7, z : 4.5e-7}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-		motion_Actuate.tween(this.mieKCoefficient,duration,{ x : 0.686, y : 0.678, z : 0.666}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-		motion_Actuate.tween(this.cameraPos,duration,{ x : 100000, y : -40000, z : 0}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-	}
-	,purpleDusk: function(duration) {
-		if(duration == null) {
-			duration = 3;
-		}
-		var _gthis = this;
-		motion_Actuate.tween(this,duration,{ turbidity : 3.6, rayleigh : 2.26, mieCoefficient : 0.005, mieDirectionalG : 0.822, luminance : 1.00, inclination : 0.502, azimuth : 0.2883, refractiveIndex : 1.000294, numMolecules : 2.542e25, depolarizationFactor : 0.068, rayleighZenithLength : 12045, mieV : 3.976, mieZenithLength : 34000, sunIntensityFactor : 1631, sunIntensityFalloffSteepness : 1.5, sunAngularDiameterDegrees : 0.00933, tonemapWeighting : 1000}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-		motion_Actuate.tween(this.primaries,duration,{ x : 7.5e-7, y : 4.5e-7, z : 5.1e-7}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-		motion_Actuate.tween(this.mieKCoefficient,duration,{ x : 0.686, y : 0.678, z : 0.666}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-		motion_Actuate.tween(this.cameraPos,duration,{ x : 100000, y : -40000, z : 0}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-	}
-	,bloodSky: function(duration) {
-		if(duration == null) {
-			duration = 3;
-		}
-		var _gthis = this;
-		motion_Actuate.tween(this,duration,{ turbidity : 4.75, rayleigh : 6.77, mieCoefficient : 0.0191, mieDirectionalG : 0.793, luminance : 1.1735, inclination : 0.4956, azimuth : 0.2174, refractiveIndex : 1.000633, numMolecules : 2.542e25, depolarizationFactor : 0.01, rayleighZenithLength : 1425, mieV : 4.042, mieZenithLength : 1600, sunIntensityFactor : 2069, sunIntensityFalloffSteepness : 2.26, sunAngularDiameterDegrees : 0.01487, tonemapWeighting : 1000}).onUpdate(function() {
-			_gthis.updateUniforms();
-		});
-		motion_Actuate.tween(this.primaries,duration,{ x : 7.929e-7, y : 3.766e-7, z : 3.172e-7}).onUpdate(function() {
 			_gthis.updateUniforms();
 		});
 		motion_Actuate.tween(this.mieKCoefficient,duration,{ x : 0.686, y : 0.678, z : 0.666}).onUpdate(function() {
@@ -6836,7 +6828,7 @@ shaders_SkyEffectController.prototype = {
 		var updateValues = function(t) {
 			controller.updateUniforms();
 		};
-		parentGui.add(controller,"preset",["stellarDawn","redSunset","bloodSky","alienDay","blueDusk","purpleDusk","fakeOcean"]).listen().onChange($bind(this,this.onPresetChanged));
+		parentGui.add(controller,"preset",["redSunset","fakeOcean"]).listen().onChange($bind(this,this.onPresetChanged));
 		var parametersFolder = parentGui.addFolder("parameters");
 		parametersFolder.add(controller,"turbidity").step(0.025).listen().onChange(updateValues);
 		parametersFolder.add(controller,"rayleigh").step(0.005).listen().onChange(updateValues);
