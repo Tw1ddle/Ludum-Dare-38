@@ -1,5 +1,7 @@
 # Ludum Dare 38
 
+[![Build Status](https://img.shields.io/travis/Tw1ddle/Ludum-Dare-38.svg?style=flat-square)](https://travis-ci.org/Tw1ddle/Ludum-Dare-38)
+
 Unfinished entry for Ludum Dare 38, the world's largest online game jam.
 
 ### About
