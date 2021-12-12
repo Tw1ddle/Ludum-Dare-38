@@ -10,9 +10,9 @@ The theme was "A Small World", so I took a world map and pruned it down, and use
 
 ### Screenshots
 
-![Screenshot1](https://github.com/Tw1ddle/ludum-dare-38/blob/master/screenshots/screenshot0.png?raw=true "Screenshot 1")
-
 ![Screenshot2](https://github.com/Tw1ddle/ludum-dare-38/blob/master/screenshots/screenshot1.png?raw=true "Screenshot 2")
+
+![Screenshot1](https://github.com/Tw1ddle/ludum-dare-38/blob/master/screenshots/screenshot0.png?raw=true "Screenshot 1")
 
 ### Dev Log
 #### April 21st
