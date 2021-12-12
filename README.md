@@ -1,8 +1,6 @@
 # Ludum Dare 38
 
-[![Build Status](https://img.shields.io/travis/Tw1ddle/Ludum-Dare-38.svg?style=flat-square)](https://travis-ci.org/Tw1ddle/Ludum-Dare-38)
-
-Unfinished entry for Ludum Dare 38, the world's largest online game jam.
+My unfinished entry for Ludum Dare 38, the world's largest online game jam.
 
 ### About
 
@@ -29,10 +27,10 @@ The theme was "A Small World", so I took a world map and pruned it down, and use
 
 ### Credits
 
-This project is written using the [Haxe](http://haxe.org/) programming language and depends on:
+This project is written using the [Haxe](https://haxe.org/) programming language and depends on:
 
 * [three.js](https://github.com/mrdoob/three.js) for rendering.
 * Haxiomic's [three.js](https://github.com/haxiomic/three-js-haxe-externs) Haxe externs.
-* Joshua Granick's [actuate](http://lib.haxe.org/p/actuate) tweening library.
-* Massive Interactive's [msignal](http://lib.haxe.org/p/msignal/) signals library.
+* Joshua Granick's [actuate](https://lib.haxe.org/p/actuate) tweening library.
+* Massive Interactive's [msignal](https://lib.haxe.org/p/msignal/) signals library.
 * My [geometrize](https://github.com/Tw1ddle/geometrize-haxe) library.
